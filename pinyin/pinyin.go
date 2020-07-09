@@ -3,33 +3,47 @@ package pinyin
 import (
 	"strings"
 
-	// github.com/lovego/pinyin
 	"github.com/mozillazg/go-pinyin"
 )
+
+var args pinyin.Args = pinyin.NewArgs()
+
+// 返回所有字符，汉字则转换为拼音，且多音字取第一个
+func Pinyin(words string) string {
+	pySlice := make([]string, 0)
+	runes := []rune(strings.TrimSpace(words))
+	for _, word := range runes {
+		pys := pinyin.Pinyin(string([]rune{word}), args)
+		if len(pys) > 0 && len(pys[0]) > 0 && len(pys[0][0]) > 0 {
+			pySlice = append(pySlice, pys[0][0])
+		} else {
+			pySlice = append(pySlice, string([]rune{word}))
+		}
+	}
+	return strings.Join(pySlice, "")
+}
 
 var firstLetters = getArgs()
 
 func getArgs() pinyin.Args {
-	a := pinyin.NewArgs()
-	a.Style = pinyin.FirstLetter
-	return a
+	args := pinyin.NewArgs()
+	args.Style = pinyin.FirstLetter
+	return args
 }
 
-// 获取所有汉字的首字母组合， 比如"长城ABC"，返回"CCABC"
-func Initials(str string) string {
-	var runes = []rune(strings.TrimSpace(str))
-	var result = make([]rune, 0, len(runes))
-	for _, r := range runes {
-		letters := pinyin.SinglePinyin(r, firstLetters)
-		if len(letters) > 0 && len(letters[0]) > 0 {
-			r = rune(letters[0][0])
+// 返回简称，汉字取拼音首字母，且多音字取第一个
+func PinyinShort(words string) string {
+	runes := []rune(strings.TrimSpace(words))
+	pinyinSlice := make([]rune, 0, len(runes))
+	for _, word := range runes {
+		pys := pinyin.SinglePinyin(word, firstLetters)
+		if len(pys) > 0 && len(pys[0]) > 0 {
+			word = rune(pys[0][0])
 		}
-
-		if r >= 'a' && r <= 'z' {
-			r -= ('a' - 'A')
+		if word >= 'a' && word <= 'z' {
+			word -= ('a' - 'A')
 		}
-
-		result = append(result, r)
+		pinyinSlice = append(pinyinSlice, word)
 	}
-	return string(result)
+	return string(pinyinSlice)
 }
