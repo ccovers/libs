@@ -1,36 +1,43 @@
 package cron
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/robfig/cron"
 )
 
-// second minute hour day_of_month month day_of_week
+// minute hour day_of_month month day_of_week
 var (
-	specEvery8Am         string = "0 0 8 * * *"
-	specEvery12pm        string = "0 0 12 * * *"
-	specEvery10m         string = "0 0/10 * * *"
-	specHourly           string = "@hourly"
-	specWeekly           string = "@weekly"
-	specDaily            string = "@daily"
-	specEvery2h          string = "0 0 0/2 * *"
-	specEvery4h          string = "0 0 0/4 * *"
-	specEvery12h         string = "0 0 0/12 * *"
-	specEveryTuesday12pm string = "0 0 12 * * 2"
-	specEveryFriday5pm   string = "0 0 17 * * 5"
-	specFirstDayInAMonth string = "0 0 0 1 * *"
-	specEveryTheusday    string = "0 0 0 * * 2"
+	SpecEverySec         string = "@every 1s"
+	SpecHourly           string = "@hourly"
+	SpecDaily            string = "@daily"
+	SpecWeekly           string = "@weekly"
+	SpecEvery1thm        string = "1 * * * *"
+	SpecEvery1m          string = "0/1 * * * *"
+	SpecEvery8Am         string = "0 8 * * *"
+	SpecEvery8h          string = "0 0/8 * * *"
+	SpecEveryTuesday18pm string = "0 18 * * 2"
+	SpecFirstDayInAMonth string = "0 0 1 * *"
+	SpecEveryTheusday    string = "0 0 * * 2"
 )
-var spec string = "0 1 * * * *"
 
-func Cron() {
+type JobFunc func()
+type Job struct {
+	Spec    string
+	JobFunc JobFunc
+}
+
+func Cron(jobs []Job) error {
+	if len(jobs) == 0 {
+		return nil
+	}
+
 	c := cron.New()
+	for _, job := range jobs {
+		_, err := c.AddFunc(job.Spec, job.JobFunc)
+		if err != nil {
+			return err
+		}
+	}
 
-	c.AddFunc("@every 1s", func() {
-		fmt.Println(time.Now())
-	})
 	c.Start()
-	time.Sleep(time.Second * 800)
+	return nil
 }
